@@ -35,7 +35,7 @@ pip install six
 echo "Installing Cython..."
 pip install cython
 echo "Installing piper-phonemize..."
-pip install piper-phonemize
+pip install "piper-phonemize~=1.1.0" || pip install "git+https://github.com/rhasspy/piper-phonemize@v1.1.0"
 echo "Installing Piper module..."
 pip install -e .
 echo "Building monotonic aligner..."
