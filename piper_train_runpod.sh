@@ -10,7 +10,11 @@ python --version || true
 pip --version || true
 
 echo "=== # Cloning the Piper fork ==="
-git clone https://github.com/imtiaz-risat/piper-tts-fork.git
+if [ -d "piper-tts-fork" ]; then
+  echo "piper-tts-fork already exists. Skipping clone."
+else
+  git clone https://github.com/imtiaz-risat/piper-tts-fork.git
+fi
 cd piper-tts-fork/src/python
 
 echo "=== Installing depdencies ==="
@@ -130,3 +134,7 @@ else:
     print("Warning: HF_UPLOAD_REPO_ID and/or HF_UPLOAD_TOKEN not set.")
 PY
 echo "Uploading model to Hugging Face complete."
+
+
+
+echo "Skipping base ONNX upload."
