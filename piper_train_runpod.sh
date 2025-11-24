@@ -34,6 +34,8 @@ echo "Installing six..."
 pip install six
 echo "Installing Cython..."
 pip install cython
+echo "Installing piper-phonemize..."
+pip install piper-phonemize
 echo "Installing Piper module..."
 pip install -e .
 echo "Building monotonic aligner..."
