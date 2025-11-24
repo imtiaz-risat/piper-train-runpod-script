@@ -67,7 +67,8 @@ python -m piper_train.preprocess \
   --output-dir "$OUTPUT_DIR" \
   --dataset-format ljspeech \
   --single-speaker \
-  --sample-rate 22050
+  --sample-rate 22050 \
+  --max-workers "${MAX_WORKERS:-4}"
 echo "Preprocessing complete."
 
 echo "Downloading checkpoint..."
