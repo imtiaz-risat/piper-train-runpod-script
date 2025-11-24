@@ -20,8 +20,14 @@ cd piper-tts-fork/src/python
 echo "=== Installing depdencies ==="
 echo "Upgrading wheel, setuptool.."
 pip install --upgrade wheel setuptools
-echo "Installing numpy..."
-pip install numpy==1.24.4
+echo "Detecting Python version for numpy..."
+PY_VER=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' || echo "3.10")
+case "$PY_VER" in
+  3.12*) NUMPY_VERSION="1.26.4" ;;
+  *) NUMPY_VERSION="1.24.4" ;;
+esac
+echo "Installing numpy ${NUMPY_VERSION}..."
+pip install "numpy==${NUMPY_VERSION}"
 echo "Installing torchmetrics..."
 pip install torchmetrics==0.11.4
 echo "Installing six..."
