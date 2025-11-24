@@ -64,6 +64,16 @@ snapshot_download(
 PY
 echo "Dataset download complete."
 
+echo "Downloading checkpoint..."
+CHECKPOINT_NAME="${HF_CHECKPOINT_NAME}"
+CHECKPOINT_URL="${HF_CHECKPOINT_URL}"
+if [ -n "${HF_CHECKPOINT_TOKEN:-}" ]; then
+  wget --header="Authorization: Bearer $HF_CHECKPOINT_TOKEN" -O "$OUTPUT_DIR/$CHECKPOINT_NAME" "$CHECKPOINT_URL"
+else
+  wget -O "$OUTPUT_DIR/$CHECKPOINT_NAME" "$CHECKPOINT_URL"
+fi
+echo "Checkpoint download complete."
+
 echo "Preprocessing dataset..."
 python -m piper_train.preprocess \
   --language bn \
@@ -74,16 +84,6 @@ python -m piper_train.preprocess \
   --sample-rate 22050 \
   --max-workers "${MAX_WORKERS:-4}"
 echo "Preprocessing complete."
-
-echo "Downloading checkpoint..."
-CHECKPOINT_NAME="${HF_CHECKPOINT_NAME}"
-CHECKPOINT_URL="${HF_CHECKPOINT_URL}"
-if [ -n "${HF_CHECKPOINT_TOKEN:-}" ]; then
-  wget --header="Authorization: Bearer $HF_CHECKPOINT_TOKEN" -O "$OUTPUT_DIR/$CHECKPOINT_NAME" "$CHECKPOINT_URL"
-else
-  wget -O "$OUTPUT_DIR/$CHECKPOINT_NAME" "$CHECKPOINT_URL"
-fi
-echo "Checkpoint download complete."
 
 echo "Training model..."
 python -m piper_train \
