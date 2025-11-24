@@ -20,22 +20,14 @@ cd piper-tts-fork/src/python
 echo "=== Installing depdencies ==="
 echo "Upgrading wheel, setuptool.."
 pip install --upgrade wheel setuptools
-echo "Detecting Python version for numpy..."
-PY_VER=$(python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' || echo "3.10")
-case "$PY_VER" in
-  3.12*) NUMPY_VERSION="1.26.4" ;;
-  *) NUMPY_VERSION="1.24.4" ;;
-esac
-echo "Installing numpy ${NUMPY_VERSION}..."
-pip install "numpy==${NUMPY_VERSION}"
+echo "Installing numpy..."
+pip install numpy==1.24.4
 echo "Installing torchmetrics..."
 pip install torchmetrics==0.11.4
 echo "Installing six..."
 pip install six
 echo "Installing Cython..."
 pip install cython
-echo "Installing piper-phonemize..."
-pip install "piper-phonemize~=1.1.0" || pip install "git+https://github.com/rhasspy/piper-phonemize@v1.1.0"
 echo "Installing Piper module..."
 pip install -e .
 echo "Building monotonic aligner..."
