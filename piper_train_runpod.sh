@@ -1,3 +1,9 @@
+set -euo pipefail
+
+#############################################
+
+### Environment variables ###
+
 echo "Checking if required environment variables are set"
 : "${HF_DATASET_REPO_ID:?ERROR: HF_DATASET_REPO_ID is not set in environment}"
 : "${HF_DATASET_TOKEN:?ERROR: HF_DATASET_TOKEN is not set in environment}"
