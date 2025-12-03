@@ -94,7 +94,7 @@ echo "Dataset download complete."
 
 echo "Preprocessing dataset..."
 python -m piper_train.preprocess \
-  --language bn \
+  --language "${LANGUAGE:-bn}" \
   --input-dir "$DATASET_DIR" \
   --output-dir "$TRAINING_DIR" \
   --dataset-format ljspeech \
