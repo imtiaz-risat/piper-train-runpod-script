@@ -41,7 +41,7 @@ When creating your pod in RunPod:
 - **Set a custom Pod Name**, e.g.
 
 ```
-api_pod_123456789012
+piper_training_bn_312424
 ```
 
 You'll pass this into the environment as `POD_NAME`.
