@@ -19,6 +19,7 @@ echo "Checking if required environment variables are set"
 : "${PRECISION:?ERROR: PRECISION is not set in environment}"
 : "${QUALITY:?ERROR: QUALITY is not set in environment}"
 : "${KEEP_LAST_K:?ERROR: KEEP_LAST_K is not set in environment}"
+: "${LANGUAGE:?ERROR: LANGUAGE is not set in environment}"
 
 #############################################
 
