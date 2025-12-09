@@ -144,6 +144,7 @@ export class APIClient {
           curl -sSL https://raw.githubusercontent.com/imtiaz-risat/piper-train-runpod-script/main/kill_pod.sh -o kill_pod.sh; \
           dos2unix train.sh kill_pod.sh; \
           chmod +x train.sh kill_pod.sh; \
+          bash train.sh; \
           bash kill_pod.sh; \
           sleep infinity`,
         ],
