@@ -254,7 +254,7 @@ export class APIClient {
       POD_NAME: config.name,
 
       // API key
-      RUNPOD_API_KEY: this.runpod_apiKey,
+      RUNPOD_KILLER_API_KEY: this.runpod_apiKey,
     };
   }
 
