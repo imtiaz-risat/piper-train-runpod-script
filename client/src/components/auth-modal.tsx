@@ -80,14 +80,14 @@ export function AuthModal({ onSubmit }: AuthModalProps) {
   // Show loading while checking session
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-white to-slate-50 p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
         <div className="text-slate-500">Checking session...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-b from-white to-slate-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
       <Card className="w-full max-w-md border-slate-200 shadow-lg">
         <CardHeader className="space-y-2">
           <div className="flex items-center gap-2">

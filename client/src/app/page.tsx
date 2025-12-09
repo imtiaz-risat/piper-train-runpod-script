@@ -1,76 +1,96 @@
-"use client";
+import Link from "next/link";
+import Image from "next/image";
 
-import { useState } from "react";
-import { AuthModal, clearAuthSession } from "@/components/auth-modal";
-import { ActivePods } from "@/components/active-pods";
-import { JobForm } from "@/components/job-form";
-import { initializeAPIClient } from "@/lib/api-client";
-import { Button } from "@/components/ui/button";
-
-export default function Home() {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [apiClient, setApiClient] = useState<any>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const handleAuth = (username: string) => {
-    const runpod_apiKey = process.env.NEXT_PUBLIC_RUNPOD_API_KEY || "";
-    if (!runpod_apiKey) {
-      console.warn("NEXT_PUBLIC_RUNPOD_API_KEY is not set!");
-    }
-    const client = initializeAPIClient(runpod_apiKey);
-    setApiClient(client);
-    setAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    clearAuthSession();
-    setAuthenticated(false);
-    setApiClient(null);
-  };
-
-  const handleJobSuccess = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
-
-  if (!authenticated) {
-    return <AuthModal onSubmit={handleAuth} />;
-  }
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-linear-to-b from-white to-slate-50">
-      <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                RunPod Dashboard
-              </h1>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="w-full sm:w-auto bg-transparent"
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 font-sans">
+      {/* Navigation */}
+      <nav className="flex items-center justify-between px-6 py-4 md:px-12 bg-white shadow-sm">
+        <div className="flex items-center gap-2">
+          <Image
+            src="/onlylogo.png"
+            alt="FirstTrain Logo"
+            width={1000}
+            height={1000}
+            className="h-12 w-auto"
+          />
+          <span className="text-2xl font-bold text-purple-600">FirstTrain</span>
+        </div>
+        <Link href="/train">
+          <button className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition">
+            Get Started
+          </button>
+        </Link>
+      </nav>
+
+      {/* Hero Section */}
+      <section
+        className="px-6 md:px-12 py-20 md:py-32 text-center bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/hero-bg.jpg')" }}
+      >
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 text-slate-900">
+            Built for Interns, <br /> by the Interns.
+          </h1>
+          <p className="text-lg md:text-xl text-slate-600 mb-8">
+            Train AI models like you never thought possible
+          </p>
+          <div className="flex gap-4 justify-center flex-wrap">
+            <Link href="/train">
+              <button className="px-8 py-3 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition shadow-lg">
+                Start Training Now
+              </button>
+            </Link>
+            <a
+              href="https://github.com/imtiaz-risat/piper-train-runpod-script"
+              target="_blank"
             >
-              Logout
-            </Button>
+              <button className="px-8 py-3 bg-white text-purple-600 border-2 border-purple-600 rounded-full font-semibold hover:bg-purple-50 transition">
+                View on GitHub
+              </button>
+            </a>
           </div>
         </div>
-      </header>
+      </section>
 
-      <main className="max-w-5xl mx-auto px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
-        <div className="space-y-8">
-          {/* Active Pods List */}
-          <section>
-            <ActivePods key={refreshTrigger} client={apiClient} />
-          </section>
-
-          {/* New Job Form - Below Pods */}
-          <section>
-            <JobForm client={apiClient} onSuccess={handleJobSuccess} />
-          </section>
+      {/* Stats Section */}
+      <section className="px-6 md:px-12 py-20 bg-gradient-to-r from-purple-600 to-purple-700">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 text-center text-white">
+            {[
+              { stat: "99.9%", label: "Uptime" },
+              { stat: "0.7s", label: "Setup Time" },
+            ].map((item, idx) => (
+              <div key={idx}>
+                <div className="text-4xl md:text-5xl font-bold mb-2">
+                  {item.stat}
+                </div>
+                <p className="text-purple-100">{item.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
-      </main>
+      </section>
+
+      {/* CTA Section */}
+      <section className="px-6 md:px-12 py-20 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          Now even an Intern can train models
+        </h2>
+        <p className="text-lg text-slate-600 mb-8 max-w-2xl mx-auto">
+          Join thousands of Interns who are building the future of AI.
+        </p>
+        <Link href="/train">
+          <button className="px-10 py-4 bg-purple-600 text-white rounded-full font-bold text-lg hover:bg-purple-700 transition shadow-lg">
+            Get Started for Free
+          </button>
+        </Link>
+      </section>
+
+      {/* Footer */}
+      <footer className="px-6 md:px-12 py-8 bg-purple-600 text-purple-100 text-center">
+        <p>© 2025 FirstTrain. All rights reserved.</p>
+      </footer>
     </div>
   );
 }
