@@ -1,56 +1,161 @@
-import { z } from "zod";
-
-// RunPod Pod Status
-export type PodStatus = "RUNNING" | "EXITED" | "STARTING" | "ERROR";
-
 // Pod from RunPod API
 export interface Pod {
   id: string;
-  name: string;
-  status: PodStatus;
-  gpuTypeId: string;
-  imageName: string;
+  name: string | null;
+  status: "RUNNING" | "STARTING" | "STOPPED" | string;
+
+  // Costs
   costPerHr: number;
+  adjustedCostPerHr: number;
+
+  // Hardware
+  gpuTypeId: string;
+  gpuCount: number;
+  gpuDisplayName: string;
+
+  vcpuCount: number;
+  memoryInGb: number;
+
+  volumeInGb: number;
+  containerDiskInGb: number;
+
+  publicIp: string | null;
+
+  // Image
+  imageName: string;
+
+  // Ports
+  portMappings: Record<string, number>;
+  ports: string[];
+
+  // Uptime
+  lastStartedAt: string;
   uptimeInSeconds: number;
 }
 
-// Training Job Configuration
-export const JobConfigSchema = z.object({
-  // Resource Config
-  podName: z
-    .string()
-    .min(3, "Pod name required")
-    .regex(/^[a-zA-Z0-9_-]+$/, "Invalid pod name"),
-  gpuTypeId: z.string().min(1, "GPU type required"),
-  cloudType: z.enum(["SECURE", "COMMUNITY"]),
-  gpuCount: z.number().int().min(1).max(8),
-  volumeInGb: z.number().int().min(10).max(1000),
-  containerDiskInGb: z.number().int().min(10).max(1000),
+export interface PodDetails {
+  id: string;
+  name: string | null;
 
-  // Dataset & Tokens
-  datasetRepo: z.string().min(1, "Dataset repo required"),
-  hfDatasetToken: z.string().min(1, "HF dataset token required"),
-  uploadRepo: z.string().min(1, "Upload repo required"),
-  hfUploadToken: z.string().min(1, "HF upload token required"),
-  sessionId: z.string().min(1, "Session ID required"),
+  adjustedCostPerHr: number;
+  costPerHr: number;
+
+  consumerUserId: string | null;
+
+  // Image can be either 'image' or 'imageName' depending on endpoint
+  image?: string;
+  imageName?: string;
+
+  interruptible?: boolean;
+  lastStartedAt: string | null;
+  lastStatusChange: string | null;
+  desiredStatus?: string;
+  createdAt?: string;
+
+  // GPU - can be nested object OR flat fields
+  gpu?: {
+    id: string;
+    count: number;
+    displayName: string;
+    securePrice?: number;
+    communityPrice?: number;
+    oneMonthPrice?: number;
+    threeMonthPrice?: number;
+    sixMonthPrice?: number;
+    oneWeekPrice?: number;
+    communitySpotPrice?: number;
+    secureSpotPrice?: number;
+  };
+  // Flat GPU fields (when gpu object is not present)
+  gpuCount?: number;
+  machineId?: string;
+  templateId?: string;
+
+  // Machine - may be empty object {}
+  machine?: {
+    gpuTypeId?: string;
+    gpuType?: {
+      id: string;
+      count: number;
+      displayName: string;
+    };
+    cpuCount?: number;
+    cpuType?: {
+      id: string;
+      displayName: string;
+      cores: number;
+      threadsPerCore: number;
+    };
+    location?: string;
+    dataCenterId?: string;
+  };
+
+  vcpuCount: number;
+  memoryInGb: number;
+  volumeInGb: number;
+  containerDiskInGb: number;
+  volumeMountPath?: string;
+
+  publicIp: string | null;
+  portMappings?: Record<string, number>;
+  ports?: string[];
+
+  env?: Record<string, string>;
+
+  networkVolume?: {
+    id: string;
+    name: string;
+    size: number;
+    dataCenterId: string;
+  };
+
+  savingsPlans?: Array<{
+    costPerHr: number;
+    endTime: string;
+    gpuTypeId: string;
+    id: string;
+    podId: string;
+    startTime: string;
+  }>;
+}
+
+// Training Job Configuration
+export interface JobConfig {
+  // Resource Config
+  name: string;
+  cloudType: "SECURE" | "COMMUNITY";
+  computeType: "GPU" | "CPU";
+  imageName: string;
+  gpuCount: number;
+  gpuTypeIds: string[];
+  ports: string[];
+  containerDiskInGb: number;
+  volumeInGb: number;
+  volumeMountPath?: string;
+  supportPublicIp: boolean;
+
+  // HF Repo, Dataset & Tokens
+  hfDatasetRepoId: string;
+  hfDatasetDownloadToken: string;
+  hfUploadRepoId: string;
+  hfUploadToken: string;
+  hfSessionName: string;
 
   // Checkpoint (Optional)
-  checkpointUrl: z.string().optional().or(z.literal("")),
-  checkpointName: z.string().optional().or(z.literal("")),
-  checkpointToken: z.string().optional().or(z.literal("")),
+  hfCheckpointName?: string;
+  hfCheckpointDownloadUrl?: string;
+  hfCheckpointDownloadToken?: string;
 
   // Hyperparameters
-  maxEpochs: z.number().int().min(1).max(10000),
-  checkpointEpochs: z.number().int().min(1).max(1000),
-  batchSize: z.number().int().min(1).max(256),
-  precision: z.enum(["16", "32"]),
-  quality: z.enum(["low", "medium", "high"]),
-  keepLastK: z.number().int().min(1).max(100),
-  language: z.string().min(1, "Language required"),
-  maxWorkers: z.number().int().min(1).max(16),
-});
-
-export type JobConfig = z.infer<typeof JobConfigSchema>;
+  maxEpochs: number;
+  checkpointEpochs: number;
+  batchSize: number;
+  precision: "16" | "32";
+  quality: "low" | "medium" | "high";
+  keepLastK: number;
+  language: string;
+  maxWorkers: number;
+}
 
 // API Response Types
 export interface CreatePodResponse {
@@ -60,6 +165,11 @@ export interface CreatePodResponse {
 }
 
 export interface TerminatePodResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface StopPodResponse {
   success: boolean;
   message: string;
 }

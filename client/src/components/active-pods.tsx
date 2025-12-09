@@ -3,15 +3,9 @@
 import { useEffect, useState } from "react";
 import { Trash2, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import type { APIClient } from "@/lib/api-client";
 import type { Pod } from "@/lib/types";
+import Link from "next/link";
 
 interface ActivePodsProps {
   client: APIClient;
@@ -25,6 +19,8 @@ export function ActivePods({ client }: ActivePodsProps) {
 
   useEffect(() => {
     loadPods();
+    const interval = setInterval(loadPods, 30000); // auto-refresh every 30s
+    return () => clearInterval(interval);
   }, []);
 
   const loadPods = async () => {
@@ -60,14 +56,11 @@ export function ActivePods({ client }: ActivePodsProps) {
 
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <CardTitle className="text-xl sm:text-2xl">
-            Active Training Pods
-          </CardTitle>
-          <CardDescription>
-            Monitor and manage your running GPU pods
-          </CardDescription>
+          <h2 className="text-xl sm:text-2xl font-semibold">RunPods</h2>
+          <p className="text-sm text-slate-500">Live view of your pods</p>
         </div>
         <Button
           onClick={loadPods}
@@ -76,103 +69,103 @@ export function ActivePods({ client }: ActivePodsProps) {
           disabled={loading}
           className="w-full sm:w-auto bg-transparent"
         >
-          {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
           Refresh
         </Button>
       </div>
 
+      {/* Error */}
       {error && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <span className="text-sm">{error}</span>
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          {error}
         </div>
       )}
 
+      {/* Loading / Empty */}
       {loading && pods.length === 0 ? (
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+        </div>
       ) : pods.length === 0 ? (
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <p className="text-slate-600">
-              No active pods. Create a new training job to get started.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center justify-center py-8 text-slate-600 text-sm">
+          No pods. Create a new training job to get started.
+        </div>
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
           {pods.map((pod) => (
-            <Card
+            <div
               key={pod.id}
-              className="border-slate-200 hover:border-slate-300 hover:shadow-md transition"
+              className="border border-slate-200 rounded-lg hover:shadow-md transition overflow-hidden"
             >
-              <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base truncate text-slate-900">
-                      {pod.name}
-                    </CardTitle>
-                    <CardDescription className="text-xs truncate">
-                      {pod.id}
-                    </CardDescription>
-                  </div>
-                  <div
-                    className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                      pod.status === "RUNNING"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-slate-100 text-slate-700"
-                    }`}
-                  >
-                    {pod.status}
-                  </div>
+              <div className="flex items-center justify-between px-4 py-2 bg-slate-50">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 truncate">
+                    {pod.name ?? "Unnamed Pod"}
+                  </p>
+                  <p className="text-xs text-slate-500 truncate">{pod.id}</p>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <p className="text-slate-500 text-xs">GPU Type</p>
-                    <p className="text-slate-900 font-medium truncate">
-                      {pod.gpuTypeId}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-slate-500 text-xs">Cost/Hour</p>
-                    <p className="text-slate-900 font-medium">
-                      ${pod.costPerHr.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-slate-500 text-xs">Uptime</p>
-                    <p className="text-slate-900 font-medium">
-                      {Math.floor(pod.uptimeInSeconds / 3600)}h{" "}
-                      {Math.floor((pod.uptimeInSeconds % 3600) / 60)}m
-                    </p>
-                  </div>
+                <div
+                  className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+                    pod.status === "RUNNING"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-slate-100 text-slate-700"
+                  }`}
+                >
+                  {pod.status}
                 </div>
+              </div>
+
+              <div className="px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm text-slate-700">
+                <div>
+                  <p className="text-xs text-slate-500">GPU</p>
+                  <p className="font-medium">
+                    {pod.gpuDisplayName} × {pod.gpuCount}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500">Cost / Hour</p>
+                  <p className="font-medium">${pod.costPerHr.toFixed(2)}</p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500">Uptime</p>
+                  <p className="font-medium">
+                    {Math.floor(pod.uptimeInSeconds / 3600)}h{" "}
+                    {Math.floor((pod.uptimeInSeconds % 3600) / 60)}m
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-slate-500">RAM</p>
+                  <p className="font-medium">{pod.memoryInGb} GB</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between px-4 py-2 border-t border-slate-200 gap-2">
+                <Link
+                  href={`/pods/${pod.id}`}
+                  className="text-sm px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 transition"
+                >
+                  Details
+                </Link>
                 <Button
                   variant="destructive"
                   size="sm"
                   onClick={() => handleTerminate(pod.id)}
                   disabled={terminating.has(pod.id)}
-                  className="w-full"
+                  className="flex items-center gap-1 text-sm px-3 py-1"
                 >
                   {terminating.has(pod.id) ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Terminating...
-                    </>
+                    <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Terminate
-                    </>
+                    <Trash2 className="w-4 h-4" />
                   )}
+                  Terminate
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

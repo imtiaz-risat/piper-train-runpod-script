@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Zap } from "lucide-react";
-import { AuthModal } from "@/components/auth-modal";
+import { AuthModal, clearAuthSession } from "@/components/auth-modal";
 import { ActivePods } from "@/components/active-pods";
 import { JobForm } from "@/components/job-form";
 import { initializeAPIClient } from "@/lib/api-client";
@@ -14,17 +13,17 @@ export default function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const handleAuth = (username: string) => {
-    // We ignore the username for now as we just need to gate the UI
-    const apiKey = process.env.NEXT_PUBLIC_RUNPOD_API_KEY || "";
-    if (!apiKey) {
+    const runpod_apiKey = process.env.NEXT_PUBLIC_RUNPOD_API_KEY || "";
+    if (!runpod_apiKey) {
       console.warn("NEXT_PUBLIC_RUNPOD_API_KEY is not set!");
     }
-    const client = initializeAPIClient(apiKey);
+    const client = initializeAPIClient(runpod_apiKey);
     setApiClient(client);
     setAuthenticated(true);
   };
 
   const handleLogout = () => {
+    clearAuthSession();
     setAuthenticated(false);
     setApiClient(null);
   };
@@ -38,16 +37,13 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50">
+    <div className="min-h-screen bg-linear-to-b from-white to-slate-50">
       <header className="border-b border-slate-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 shadow-sm">
-                <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-              </div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                Piper Training Dashboard
+                RunPod Dashboard
               </h1>
             </div>
             <Button
@@ -62,17 +58,17 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          {/* Left: Active Pods */}
-          <div className="lg:col-span-2">
+      <main className="max-w-5xl mx-auto px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
+        <div className="space-y-8">
+          {/* Active Pods List */}
+          <section>
             <ActivePods key={refreshTrigger} client={apiClient} />
-          </div>
+          </section>
 
-          {/* Right: New Job Form */}
-          <div className="lg:col-span-1">
+          {/* New Job Form - Below Pods */}
+          <section>
             <JobForm client={apiClient} onSuccess={handleJobSuccess} />
-          </div>
+          </section>
         </div>
       </main>
     </div>
