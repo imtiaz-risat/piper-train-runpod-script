@@ -3,8 +3,8 @@ set -ex
 
 echo "Running kill_pod.sh..."
 
-if [ -z "$RUNPOD_API_KEY" ]; then
-  echo "ERROR: RUNPOD_API_KEY is missing."
+if [ -z "$RUNPOD_KILLER_API_KEY" ]; then
+  echo "ERROR: RUNPOD_KILLER_API_KEY is missing."
   exit 1
 fi
 
@@ -15,11 +15,10 @@ fi
 
 echo "Pod name: $POD_NAME"
 echo "Killer API key: $RUNPOD_KILLER_API_KEY"
-echo "RunPod API key: $RUNPOD_API_KEY"
 
 # Find pod ID
 pod_id=$(curl -sS "https://rest.runpod.io/v1/pods?name=$POD_NAME" \
-  -H "Authorization: Bearer $RUNPOD_API_KEY" | jq -r '.[0].id')
+  -H "Authorization: Bearer $RUNPOD_KILLER_API_KEY" | jq -r '.[0].id')
 
 echo "Found pod_id: $pod_id"
 
@@ -32,7 +31,7 @@ fi
 for i in {1..5}; do
   echo "Attempt $i: Deleting pod $pod_id ..."
   if curl --fail -sS -X DELETE "https://rest.runpod.io/v1/pods/$pod_id" \
-      -H "Authorization: Bearer $RUNPOD_API_KEY"; then
+      -H "Authorization: Bearer $RUNPOD_KILLER_API_KEY"; then
       echo "Pod deletion succeeded."
       exit 0
   fi
