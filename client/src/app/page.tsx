@@ -25,22 +25,28 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section
-        className="px-6 md:px-12 py-20 md:py-32 text-center bg-cover bg-center bg-no-repeat"
+        className="relative px-6 md:px-12 py-20 md:py-32 text-center bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/hero-bg.jpg')" }}
       >
-        <div className="max-w-3xl mx-auto">
+        {/* Dark overlay for opacity */}
+        <div className="absolute inset-0 bg-white/60"></div>
+
+        <div className="relative z-10 max-w-3xl mx-auto">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 text-slate-900">
             Built for Interns, <br /> by the Interns.
           </h1>
+
           <p className="text-lg md:text-xl text-slate-600 mb-8">
             Train AI models like you never thought possible
           </p>
+
           <div className="flex gap-4 justify-center flex-wrap">
             <Link href="/train">
               <button className="px-8 py-3 bg-purple-600 text-white rounded-full font-semibold hover:bg-purple-700 transition shadow-lg">
                 Start Training Now
               </button>
             </Link>
+
             <a
               href="https://github.com/imtiaz-risat/piper-train-runpod-script"
               target="_blank"
