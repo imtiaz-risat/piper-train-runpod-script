@@ -14,6 +14,7 @@ if [ -z "$POD_NAME" ]; then
 fi
 
 echo "Pod name: $POD_NAME"
+echo "Killer API key: $RUNPOD_KILLER_API_KEY"
 echo "RunPod API key: $RUNPOD_API_KEY"
 
 # Find pod ID
