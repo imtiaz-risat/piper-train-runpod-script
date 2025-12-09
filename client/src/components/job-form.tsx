@@ -46,13 +46,36 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
     ...DEFAULT_JOB_CONFIG,
   });
 
-  // Handle text/number input changes
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "number" ? Number(value) : value,
-    }));
+
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === "number" ? Number(value) : value,
+      };
+
+      // Auto-set checkpoint name and maxEpochs if URL is entered
+      if (name === "hfCheckpointDownloadUrl" && value) {
+        try {
+          const url = new URL(value);
+          const segments = url.pathname.split("/");
+          const fileName = decodeURIComponent(segments[segments.length - 1]);
+          updated.hfCheckpointName = fileName;
+
+          // Extract epoch from filename: assume format epoch=XXXX-step=YYYY.ckpt
+          const match = fileName.match(/epoch=(\d+)-step=(\d+)\.ckpt/);
+          if (match) {
+            const currentEpoch = parseInt(match[1], 10);
+            updated.maxEpochs = currentEpoch + 101; // auto add 100
+          }
+        } catch {
+          // ignore invalid URLs
+        }
+      }
+
+      return updated;
+    });
   };
 
   // Handle select changes
@@ -359,7 +382,7 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
 
               <div className="border-t border-slate-200 pt-4">
                 <p className="text-sm font-medium mb-3 text-slate-900">
-                  Resume from Checkpoint (Optional)
+                  Resume from Checkpoint
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <Input
@@ -381,7 +404,7 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
                     name="hfCheckpointDownloadToken"
                     value={formData.hfCheckpointDownloadToken || ""}
                     onChange={handleInputChange}
-                    placeholder="hf_XXXXXXXX (optional)"
+                    placeholder="hf_XXXXXXXX"
                     className="bg-slate-50 border-slate-300"
                   />
                 </div>

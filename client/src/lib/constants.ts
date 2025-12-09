@@ -26,8 +26,13 @@ export const LANGUAGES = [
   { code: "ne", name: "Nepali" },
 ];
 
+const now = new Date();
+const day = String(now.getDate()).padStart(2, "0");
+const month = String(now.getMonth() + 1).padStart(2, "0");
+const year = now.getFullYear();
+
 export const DEFAULT_JOB_CONFIG: JobConfig = {
-  name: `Default Training Pod`,
+  name: `piper_training_pod_${day}-${month}-${year}`,
   computeType: "GPU",
   imageName: "runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04",
   gpuTypeIds: ["NVIDIA A100 80GB PCIe"],
@@ -41,16 +46,16 @@ export const DEFAULT_JOB_CONFIG: JobConfig = {
   hfDatasetDownloadToken: "",
   hfUploadRepoId: "",
   hfUploadToken: "",
-  hfSessionName: `sushmitaV3-${Date.now()}`,
+  hfSessionName: `voice_name_${day}-${month}-${year}`,
   hfCheckpointDownloadUrl: "",
   hfCheckpointName: "",
   hfCheckpointDownloadToken: "",
-  maxEpochs: 1001,
+  maxEpochs: 6200,
   checkpointEpochs: 25,
   batchSize: 16,
   precision: "16",
   quality: "medium",
-  keepLastK: 5,
+  keepLastK: 2,
   language: "bn",
-  maxWorkers: 4,
+  maxWorkers: 1,
 };

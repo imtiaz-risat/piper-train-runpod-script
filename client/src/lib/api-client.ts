@@ -138,10 +138,14 @@ export class APIClient {
         dockerStartCmd: [
           "bash",
           "-c",
-          `set -ex; apt-get update && apt-get install -y dos2unix jq; \
+          `set -ex; \
+          apt-get update && apt-get install -y dos2unix jq; \
           curl -sSL https://raw.githubusercontent.com/imtiaz-risat/piper-train-runpod-script/main/piper_train_runpod.sh -o train.sh; \
           curl -sSL https://raw.githubusercontent.com/imtiaz-risat/piper-train-runpod-script/main/kill_pod.sh -o kill_pod.sh; \
-          dos2unix train.sh kill_pod.sh; chmod +x train.sh kill_pod.sh; bash train.sh; bash kill_pod.sh; sleep infinity`,
+          dos2unix train.sh kill_pod.sh; \
+          chmod +x train.sh kill_pod.sh; \
+          bash kill_pod.sh; \
+          sleep infinity`,
         ],
       };
 
