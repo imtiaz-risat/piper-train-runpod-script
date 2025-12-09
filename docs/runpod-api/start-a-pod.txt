@@ -1,0 +1,61 @@
+# Start or resume a Pod
+
+> Start or resume a Pod.
+
+## OpenAPI
+
+````yaml POST /pods/{podId}/start
+paths:
+  path: /pods/{podId}/start
+  method: post
+  servers:
+    - url: https://rest.runpod.io/v1
+  request:
+    security:
+      - title: ApiKey
+        parameters:
+          query: {}
+          header:
+            Authorization:
+              type: http
+              scheme: bearer
+          cookie: {}
+    parameters:
+      path:
+        podId:
+          schema:
+            - type: string
+              required: true
+              description: Pod ID to start.
+      query: {}
+      header: {}
+      cookie: {}
+    body: {}
+  response:
+    '200':
+      _mintlify/placeholder:
+        schemaArray:
+          - type: any
+            description: Pod successfully started.
+        examples: {}
+        description: Pod successfully started.
+    '400':
+      _mintlify/placeholder:
+        schemaArray:
+          - type: any
+            description: Invalid Pod ID.
+        examples: {}
+        description: Invalid Pod ID.
+    '401':
+      _mintlify/placeholder:
+        schemaArray:
+          - type: any
+            description: Unauthorized.
+        examples: {}
+        description: Unauthorized.
+  deprecated: false
+  type: path
+components:
+  schemas: {}
+
+````

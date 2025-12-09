@@ -113,6 +113,7 @@ In the **Pod Template → Edit → Environment Variables** section, add these:
 | `KEEP_LAST_K`          | Keep only last K checkpoints locally/in the pod    |
 | `RUNPOD_API_KEY`       | (Required for auto-kill) Your RunPod API key       |
 | `POD_NAME`             | The exact name of the pod you created              |
+| `LANGUAGE`             | Language code for training                         |
 
 Example:
 
@@ -133,6 +134,7 @@ QUALITY="medium"
 KEEP_LAST_K="5"
 RUNPOD_API_KEY="rp_XXXXXXXXXXXXXXXX"
 POD_NAME="api_pod_123456789012"
+LANGUAGE="bn"
 ```
 
 ---
