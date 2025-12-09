@@ -28,7 +28,11 @@ export function ActivePods({ client }: ActivePodsProps) {
       setLoading(true);
       setError(null);
       const data = await client.getPods();
-      setPods(data);
+      // Filter pods to only show those with 'piper' in their name
+      const piperPods = data.filter((pod: Pod) =>
+        pod.name?.toLowerCase().includes("piper")
+      );
+      setPods(piperPods);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load pods");
     } finally {
