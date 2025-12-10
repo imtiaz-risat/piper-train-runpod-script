@@ -9,15 +9,15 @@ interface RouteParams {
 /**
  * POST /api/v1/pods/[podId]/stop - Stop a pod
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export async function POST(_request: NextRequest, { params }: RouteParams) {
   try {
     const { podId } = await params;
-    const apiKey = request.headers.get("x-runpod-api-key");
+    const apiKey = process.env.RUNPOD_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing x-runpod-api-key header" },
-        { status: 401 }
+        { error: "RUNPOD_API_KEY is not configured on server" },
+        { status: 500 }
       );
     }
 

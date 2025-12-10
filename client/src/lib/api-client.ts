@@ -11,10 +11,8 @@ import type {
 const API_BASE_URL = "/api/v1";
 
 export class APIClient {
-  private runpod_apiKey: string;
-
-  constructor(runpod_apiKey: string) {
-    this.runpod_apiKey = runpod_apiKey;
+  constructor() {
+    // API key is now managed server-side
   }
 
   /**
@@ -226,6 +224,7 @@ export class APIClient {
 
   /**
    * Build environment variables for the training job
+   * Note: RUNPOD_KILLER_API_KEY is injected server-side for security
    */
   private buildEnvironmentVariables(config: JobConfig): Record<string, string> {
     return {
@@ -253,28 +252,26 @@ export class APIClient {
 
       // Pod metadata
       POD_NAME: config.name,
-
-      // API key
-      RUNPOD_KILLER_API_KEY: this.runpod_apiKey,
     };
   }
 
   /**
-   * Get headers for API requests (passes API key to server-side proxy)
+   * Get headers for API requests (API key is now managed server-side)
    */
   private getHeaders() {
     return {
-      "x-runpod-api-key": this.runpod_apiKey,
       "Content-Type": "application/json",
     };
   }
 }
 
-// Create singleton instance (only set when API key is available)
+// Create singleton instance
 let client: APIClient | null = null;
 
-export function initializeAPIClient(runpod_apiKey: string): APIClient {
-  client = new APIClient(runpod_apiKey);
+export function initializeAPIClient(): APIClient {
+  if (!client) {
+    client = new APIClient();
+  }
   return client;
 }
 

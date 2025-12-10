@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Lock, User, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -56,23 +56,37 @@ export function AuthModal({ onSubmit }: AuthModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
-      alert("Please enter both username and password");
       return;
     }
 
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 500));
 
-    if (username === "SUPIPER" && password === "super-piper") {
-      // Store session in localStorage for 6 hours
-      const session: AuthSession = {
-        username,
-        expiresAt: Date.now() + SESSION_DURATION_MS,
-      };
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      onSubmit(username);
-    } else {
-      alert("Invalid credentials");
+    try {
+      const response = await fetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store session in localStorage for 6 hours
+        const session: AuthSession = {
+          username,
+          expiresAt: Date.now() + SESSION_DURATION_MS,
+        };
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        onSubmit(username);
+      } else {
+        alert(data.error || "Invalid credentials");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed. Please try again.");
       setLoading(false);
     }
   };
@@ -80,89 +94,116 @@ export function AuthModal({ onSubmit }: AuthModalProps) {
   // Show loading while checking session
   if (checkingSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
-        <div className="text-slate-500">Checking session...</div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-purple-200"></div>
+          <div className="h-4 w-32 rounded bg-slate-200"></div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md border-slate-200 shadow-lg">
-        <CardHeader className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-linear-to-br from-purple-600 to-purple-700">
-              <Lock className="w-5 h-5 text-white" />
+    <div className="min-h-screen flex items-center justify-center bg-[url('/hero-bg.jpg')] bg-cover bg-center">
+      {/* Abstract background elements */}
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+
+      <div className="relative w-full max-w-md p-4">
+        {/* Decorative elements behind card */}
+        <div className="absolute -top-12 -left-12 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+
+        <Card className="relative w-full border-0 shadow-2xl bg-white/90 backdrop-blur-xl ring-1 ring-white/50 overflow-hidden">
+          {/* Top colored accent line */}
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-500"></div>
+
+          <CardHeader className="space-y-3 pt-8 pb-6 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-50 shadow-inner">
+              <Lock className="h-7 w-7 text-purple-600" />
             </div>
-            <CardTitle className="text-2xl">Piper Training</CardTitle>
-          </div>
-          <CardDescription className="text-slate-600">
-            Login to access the dashboard.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Username */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-900">
-                Username
-              </label>
-              <div className="relative">
-                <Input
-                  type="text"
-                  placeholder="admin"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="pr-10 bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400"
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
-                  <User className="w-4 h-4" />
+            <div className="space-y-1">
+              <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
+                Welcome Back
+              </CardTitle>
+              <CardDescription className="text-slate-500 text-base">
+                Sign in to access your training dashboard
+              </CardDescription>
+            </div>
+          </CardHeader>
+
+          <CardContent className="p-6 pt-0">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-4">
+                {/* Username Input */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700 ml-1">
+                    Username
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-600 transition-colors">
+                      <User className="h-5 w-5" />
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder="Enter your username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="pl-10 h-11 bg-slate-50 border-slate-200 focus:border-purple-500 focus:ring-purple-500/20 transition-all font-medium text-slate-900 placeholder:text-slate-400 rounded-xl"
+                    />
+                  </div>
+                </div>
+
+                {/* Password Input */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700 ml-1">
+                    Password
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-purple-600 transition-colors">
+                      <Lock className="h-5 w-5" />
+                    </div>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 pr-10 h-11 bg-slate-50 border-slate-200 focus:border-purple-500 focus:ring-purple-500/20 transition-all font-medium text-slate-900 placeholder:text-slate-400 rounded-xl"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none p-1 rounded-md hover:bg-slate-100"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-900">
-                Password
-              </label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10 bg-slate-50 border-slate-300 text-slate-900 placeholder:text-slate-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700"
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  disabled={loading || !username || !password}
+                  className="w-full h-11 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-purple-500/20 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:hover:scale-100"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
+                  <span className="flex items-center gap-2">
+                    {loading ? "Verifying..." : "Sign In"}
+                    {!loading && <ArrowRight className="w-4 h-4 opacity-80" />}
+                  </span>
+                </Button>
               </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-700"
-            >
-              {loading ? "Logging in..." : "Login"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
 
-// Helper function to clear session (useful for logout)
 export function clearAuthSession() {
   localStorage.removeItem(SESSION_KEY);
 }

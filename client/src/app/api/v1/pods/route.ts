@@ -5,14 +5,14 @@ const RUNPOD_BASE_URL = "https://rest.runpod.io/v1";
 /**
  * GET /api/v1/pods - List all pods
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const apiKey = request.headers.get("x-runpod-api-key");
+    const apiKey = process.env.RUNPOD_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing x-runpod-api-key header" },
-        { status: 401 }
+        { error: "RUNPOD_API_KEY is not configured on server" },
+        { status: 500 }
       );
     }
 
@@ -48,16 +48,22 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = request.headers.get("x-runpod-api-key");
+    const apiKey = process.env.RUNPOD_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing x-runpod-api-key header" },
-        { status: 401 }
+        { error: "RUNPOD_API_KEY is not configured on server" },
+        { status: 500 }
       );
     }
 
     const body = await request.json();
+
+    // Inject RUNPOD_KILLER_API_KEY into pod's environment variables
+    // This allows the pod to terminate itself after training completes
+    if (body.env && typeof body.env === "object") {
+      body.env.RUNPOD_KILLER_API_KEY = apiKey;
+    }
 
     const response = await fetch(`${RUNPOD_BASE_URL}/pods`, {
       method: "POST",

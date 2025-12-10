@@ -561,7 +561,7 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
                   {step === "hyperparams" ? "Deploying..." : "Next"}
                 </>
               ) : step === "hyperparams" ? (
-                "Deploy Training Job"
+                "LAGA Training"
               ) : (
                 "Next"
               )}

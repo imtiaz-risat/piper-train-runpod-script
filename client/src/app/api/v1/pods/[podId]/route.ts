@@ -9,15 +9,15 @@ interface RouteParams {
 /**
  * GET /api/v1/pods/[podId] - Get pod details
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: RouteParams) {
   try {
     const { podId } = await params;
-    const apiKey = request.headers.get("x-runpod-api-key");
+    const apiKey = process.env.RUNPOD_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing x-runpod-api-key header" },
-        { status: 401 }
+        { error: "RUNPOD_API_KEY is not configured on server" },
+        { status: 500 }
       );
     }
 
@@ -51,15 +51,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 /**
  * DELETE /api/v1/pods/[podId] - Terminate pod
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   try {
     const { podId } = await params;
-    const apiKey = request.headers.get("x-runpod-api-key");
+    const apiKey = process.env.RUNPOD_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing x-runpod-api-key header" },
-        { status: 401 }
+        { error: "RUNPOD_API_KEY is not configured on server" },
+        { status: 500 }
       );
     }
 

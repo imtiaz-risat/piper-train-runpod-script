@@ -14,12 +14,8 @@ export default function TrainPage() {
   const [apiClient, setApiClient] = useState<any>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const handleAuth = (username: string) => {
-    const runpod_apiKey = process.env.NEXT_PUBLIC_RUNPOD_API_KEY || "";
-    if (!runpod_apiKey) {
-      console.warn("NEXT_PUBLIC_RUNPOD_API_KEY is not set!");
-    }
-    const client = initializeAPIClient(runpod_apiKey);
+  const handleAuth = () => {
+    const client = initializeAPIClient();
     setApiClient(client);
     setAuthenticated(true);
   };
@@ -53,6 +49,12 @@ export default function TrainPage() {
           <span className="text-2xl font-bold text-purple-600">FirstTrain</span>
         </Link>
         <div className="flex items-center gap-4">
+          <Link
+            href="/docs"
+            className="text-purple-600 font-medium hover:text-purple-700 transition hover:underline"
+          >
+            Docs
+          </Link>
           <span className="inline-flex items-center text-xs sm:text-sm font-medium text-purple-700 bg-purple-100 px-3 py-1.5 rounded-full border border-purple-200 shadow-sm">
             Training Dashboard
           </span>
@@ -61,7 +63,7 @@ export default function TrainPage() {
             variant="outline"
             size="sm"
             onClick={handleLogout}
-            className="border-purple-600 text-purple-600 hover:bg-purple-50"
+            className="border-rose-600 text-rose-600 hover:bg-rose-50"
           >
             Logout
           </Button>
@@ -81,11 +83,6 @@ export default function TrainPage() {
           </section>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="px-6 md:px-12 py-8 bg-purple-600 text-purple-100 text-center mt-8">
-        <p>© 2025 FirstTrain. All rights reserved.</p>
-      </footer>
     </div>
   );
 }
