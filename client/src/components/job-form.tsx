@@ -1,7 +1,21 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Loader2 } from "lucide-react";
+import {
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+import {
+  Loader2,
+  Cpu,
+  Database,
+  Settings,
+  RotateCcw,
+  Rocket,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,13 +33,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { JobConfig } from "@/lib/types";
 import type { APIClient } from "@/lib/api-client";
 import {
   DEFAULT_JOB_CONFIG,
   GPU_TYPES,
-  CLOUD_TYPES,
   QUALITY_OPTIONS,
   PRECISION_OPTIONS,
   LANGUAGES,
@@ -34,17 +46,58 @@ import {
 interface JobFormProps {
   client: APIClient;
   onSuccess: () => void;
+  formData: JobConfig;
+  onFormDataChange: Dispatch<SetStateAction<JobConfig>>;
 }
 
-export function JobForm({ client, onSuccess }: JobFormProps) {
-  const [step, setStep] = useState<"config" | "dataset" | "hyperparams">(
-    "config"
+// Helper to detect cloud type from GPU label
+function getCloudTypeFromGpu(gpuId: string): "COMMUNITY" | "SECURE" {
+  const gpu = GPU_TYPES.find((g) => g.id === gpuId);
+  if (gpu?.label.includes("Community")) return "COMMUNITY";
+  if (gpu?.label.includes("Secure")) return "SECURE";
+  return "COMMUNITY";
+}
+
+// Section Header Component
+function SectionHeader({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 mb-5">
+      <div className="p-2 rounded-lg bg-purple-100 mt-0.5">
+        <Icon className="w-5 h-5 text-purple-600" />
+      </div>
+      <div>
+        <h3 className="text-lg font-semibold text-slate-800">{title}</h3>
+        <p className="text-sm text-slate-500">{description}</p>
+      </div>
+    </div>
   );
+}
+
+export function JobForm({
+  client,
+  onSuccess,
+  formData,
+  onFormDataChange: setFormData,
+}: JobFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formData, setFormData] = useState<JobConfig>({
-    ...DEFAULT_JOB_CONFIG,
-  });
+
+  // Auto-update cloud type when GPU changes
+  useEffect(() => {
+    const gpuId = formData.gpuTypeIds[0];
+    if (gpuId) {
+      const cloudType = getCloudTypeFromGpu(gpuId);
+      setFormData((prev) => ({ ...prev, cloudType }));
+    }
+  }, [formData.gpuTypeIds]);
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -67,7 +120,7 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
           const match = fileName.match(/epoch=(\d+)-step=(\d+)\.ckpt/);
           if (match) {
             const currentEpoch = parseInt(match[1], 10);
-            updated.maxEpochs = currentEpoch + 101; // auto add 100
+            updated.maxEpochs = currentEpoch + 101;
           }
         } catch {
           // ignore invalid URLs
@@ -78,7 +131,6 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
     });
   };
 
-  // Handle select changes
   const handleSelectChange = (name: keyof JobConfig, value: string) => {
     if (name === "supportPublicIp") {
       setFormData((prev) => ({ ...prev, [name]: value === "true" }));
@@ -89,7 +141,6 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
     }
   };
 
-  // Handle ports input (comma separated)
   const handlePortsChange = (e: ChangeEvent<HTMLInputElement>) => {
     const ports = e.target.value
       .split(",")
@@ -98,7 +149,6 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
     setFormData((prev) => ({ ...prev, ports }));
   };
 
-  // Simple validation
   const validateForm = (): string | null => {
     if (!formData.name || formData.name.length < 3) {
       return "Pod name must be at least 3 characters";
@@ -117,16 +167,6 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (step === "config") {
-      setStep("dataset");
-      return;
-    }
-    if (step === "dataset") {
-      setStep("hyperparams");
-      return;
-    }
-
-    // Final submission
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -138,7 +178,6 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
       setError(null);
       await client.createPod(formData);
       setFormData({ ...DEFAULT_JOB_CONFIG });
-      setStep("config");
       onSuccess();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create pod");
@@ -148,368 +187,367 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
   };
 
   const handleReset = () => {
-    if (step === "config") {
-      setFormData({ ...DEFAULT_JOB_CONFIG });
-    } else if (step === "dataset") {
-      setStep("config");
-    } else {
-      setStep("dataset");
-    }
+    setFormData({ ...DEFAULT_JOB_CONFIG });
+    setError(null);
   };
 
   return (
-    <Card className="border border-slate-200 shadow-sm rounded-lg max-w-5xl mx-auto">
-      <CardHeader className="pb-2">
-        <CardTitle>Create Training Job</CardTitle>
+    <Card className="border border-slate-200 shadow-sm rounded-lg">
+      <CardHeader className="pb-4 border-b border-slate-100">
+        <CardTitle className="text-xl">Create Training Job</CardTitle>
         <CardDescription>
-          Configure and deploy a new Piper TTS training pod
+          Configure all settings below and deploy a new Piper TTS training pod
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <Tabs value={step} onValueChange={(v) => setStep(v as typeof step)}>
-            <TabsList className="grid w-full grid-cols-3 bg-slate-100 border border-slate-200 rounded-md overflow-hidden">
-              <TabsTrigger value="config">Resource Config</TabsTrigger>
-              <TabsTrigger value="dataset">Dataset & Tokens</TabsTrigger>
-              <TabsTrigger value="hyperparams">Hyperparameters</TabsTrigger>
-            </TabsList>
 
-            {/* Step 1: Resource Config */}
-            <TabsContent value="config" className="space-y-6 mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Pod Name</Label>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="piper-train-001"
-                    className="bg-slate-50 border-slate-300"
-                  />
+      <CardContent className="p-0">
+        <form onSubmit={handleSubmit}>
+          {/* Section 1: GPU & Resources */}
+          <div id="gpu-resources" className="p-6 border-b border-slate-100">
+            <SectionHeader
+              icon={Cpu}
+              title="GPU & Resources"
+              description="Select your GPU and configure compute resources"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="space-y-2">
+                <Label className="text-slate-700">Pod Name</Label>
+                <Input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="piper-train-001"
+                  className="bg-slate-50 border-slate-200 focus:border-purple-500"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">GPU Type</Label>
+                <Select
+                  value={formData.gpuTypeIds[0] || ""}
+                  onValueChange={(v) => handleSelectChange("gpuTypeIds", v)}
+                >
+                  <SelectTrigger className="bg-slate-50 border-slate-200 w-full min-w-0 [&>span]:truncate">
+                    <SelectValue placeholder="Select GPU" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {GPU_TYPES.map((gpu) => (
+                      <SelectItem key={gpu.id} value={gpu.id}>
+                        {gpu.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Cloud Type</Label>
+                <div className="h-10 px-3 flex items-center bg-slate-100 border border-slate-200 rounded-md text-sm text-slate-600">
+                  {formData.cloudType === "COMMUNITY"
+                    ? "Community Cloud"
+                    : "Secure Cloud"}
+                  <span className="ml-auto text-xs text-slate-400">
+                    (auto-selected)
+                  </span>
                 </div>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Compute Type</Label>
-                  <Select
-                    value={formData.computeType}
-                    onValueChange={(v) => handleSelectChange("computeType", v)}
-                  >
-                    <SelectTrigger className="bg-slate-50 border-slate-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-300">
-                      {["GPU", "CPU"].map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700">GPU Count</Label>
+                <Input
+                  type="number"
+                  name="gpuCount"
+                  value={formData.gpuCount}
+                  onChange={handleInputChange}
+                  className="bg-slate-50 border-slate-200"
+                  min={1}
+                  max={8}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label>GPU Type(s)</Label>
-                  <Select
-                    value={formData.gpuTypeIds[0] || ""}
-                    onValueChange={(v) => handleSelectChange("gpuTypeIds", v)}
-                  >
-                    <SelectTrigger className="bg-slate-50 border-slate-300">
-                      <SelectValue placeholder="Select GPU" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-300">
-                      {GPU_TYPES.map((gpu) => (
-                        <SelectItem key={gpu.id} value={gpu.id}>
-                          {gpu.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700">Volume (GB)</Label>
+                <Input
+                  type="number"
+                  name="volumeInGb"
+                  value={formData.volumeInGb}
+                  onChange={handleInputChange}
+                  className="bg-slate-50 border-slate-200"
+                  min={10}
+                />
+              </div>
 
-                <div className="space-y-2">
-                  <Label>GPU Count</Label>
-                  <Input
-                    type="number"
-                    name="gpuCount"
-                    value={formData.gpuCount}
-                    onChange={handleInputChange}
-                    className="bg-slate-50 border-slate-300"
-                    min={1}
-                    max={8}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label className="text-slate-700">Container Disk (GB)</Label>
+                <Input
+                  type="number"
+                  name="containerDiskInGb"
+                  value={formData.containerDiskInGb}
+                  onChange={handleInputChange}
+                  className="bg-slate-50 border-slate-200"
+                  min={10}
+                />
+              </div>
+            </div>
 
+            {/* Advanced Options - Collapsed by default feel */}
+            <details className="mt-5">
+              <summary className="text-sm text-purple-600 cursor-pointer hover:text-purple-700 font-medium">
+                Advanced Options
+              </summary>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-4 pt-4 border-t border-slate-100">
                 <div className="space-y-2">
-                  <Label>Cloud Type</Label>
-                  <Select
-                    value={formData.cloudType}
-                    onValueChange={(v) => handleSelectChange("cloudType", v)}
-                  >
-                    <SelectTrigger className="bg-slate-50 border-slate-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-300">
-                      {CLOUD_TYPES.map((cloud) => (
-                        <SelectItem key={cloud.id} value={cloud.id}>
-                          {cloud.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Image Name</Label>
+                  <Label className="text-slate-700">Docker Image</Label>
                   <Input
                     name="imageName"
                     value={formData.imageName}
                     onChange={handleInputChange}
-                    placeholder="Docker image"
-                    className="bg-slate-50 border-slate-300"
+                    className="bg-slate-50 border-slate-200 text-sm"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Ports (comma separated)</Label>
+                  <Label className="text-slate-700">Ports</Label>
                   <Input
                     value={formData.ports.join(", ")}
                     onChange={handlePortsChange}
                     placeholder="8888/http, 22/tcp"
-                    className="bg-slate-50 border-slate-300"
+                    className="bg-slate-50 border-slate-200 text-sm"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Volume (GB)</Label>
-                  <Input
-                    type="number"
-                    name="volumeInGb"
-                    value={formData.volumeInGb}
-                    onChange={handleInputChange}
-                    className="bg-slate-50 border-slate-300"
-                    min={10}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Container Disk (GB)</Label>
-                  <Input
-                    type="number"
-                    name="containerDiskInGb"
-                    value={formData.containerDiskInGb}
-                    onChange={handleInputChange}
-                    className="bg-slate-50 border-slate-300"
-                    min={10}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Support Public IP</Label>
+                  <Label className="text-slate-700">Public IP</Label>
                   <Select
                     value={formData.supportPublicIp ? "true" : "false"}
                     onValueChange={(v) =>
                       handleSelectChange("supportPublicIp", v)
                     }
                   >
-                    <SelectTrigger className="bg-slate-50 border-slate-300">
+                    <SelectTrigger className="bg-slate-50 border-slate-200">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-300">
+                    <SelectContent className="bg-white">
                       <SelectItem value="true">Yes</SelectItem>
                       <SelectItem value="false">No</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
-            </TabsContent>
+            </details>
+          </div>
 
-            {/* Step 2: Dataset & Tokens */}
-            <TabsContent value="dataset" className="space-y-6 mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Dataset Repo ID</Label>
-                  <Input
-                    name="hfDatasetRepoId"
-                    value={formData.hfDatasetRepoId}
-                    onChange={handleInputChange}
-                    placeholder="username/dataset-name"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Dataset Token</Label>
-                  <Input
-                    type="password"
-                    name="hfDatasetDownloadToken"
-                    value={formData.hfDatasetDownloadToken}
-                    onChange={handleInputChange}
-                    placeholder="hf_XXXXXXXX"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Upload Repo ID</Label>
-                  <Input
-                    name="hfUploadRepoId"
-                    value={formData.hfUploadRepoId}
-                    onChange={handleInputChange}
-                    placeholder="username/checkpoints"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Upload Token</Label>
-                  <Input
-                    type="password"
-                    name="hfUploadToken"
-                    value={formData.hfUploadToken}
-                    onChange={handleInputChange}
-                    placeholder="hf_XXXXXXXX"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Session Name</Label>
-                  <Input
-                    name="hfSessionName"
-                    value={formData.hfSessionName}
-                    onChange={handleInputChange}
-                    placeholder="session-01"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                </div>
-              </div>
+          {/* Section 2: Dataset & Tokens */}
+          <div id="dataset-tokens" className="p-6 border-b border-slate-100">
+            <SectionHeader
+              icon={Database}
+              title="Dataset & Tokens"
+              description="Configure your Hugging Face dataset and authentication"
+            />
 
-              <div className="border-t border-slate-200 pt-4">
-                <p className="text-sm font-medium mb-3 text-slate-900">
-                  Resume from Checkpoint
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <Input
-                    name="hfCheckpointDownloadUrl"
-                    value={formData.hfCheckpointDownloadUrl || ""}
-                    onChange={handleInputChange}
-                    placeholder="https://huggingface.co/.../checkpoint.ckpt"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                  <Input
-                    name="hfCheckpointName"
-                    value={formData.hfCheckpointName || ""}
-                    onChange={handleInputChange}
-                    placeholder="checkpoint-name.ckpt"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                  <Input
-                    type="password"
-                    name="hfCheckpointDownloadToken"
-                    value={formData.hfCheckpointDownloadToken || ""}
-                    onChange={handleInputChange}
-                    placeholder="hf_XXXXXXXX"
-                    className="bg-slate-50 border-slate-300"
-                  />
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* Step 3: Hyperparameters */}
-            <TabsContent value="hyperparams" className="space-y-6 mt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Max Epochs</Label>
-                  <Input
-                    type="number"
-                    name="maxEpochs"
-                    value={formData.maxEpochs}
-                    onChange={handleInputChange}
-                    className="bg-slate-50 border-slate-300"
-                    min={1}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Checkpoint Epochs</Label>
-                  <Input
-                    type="number"
-                    name="checkpointEpochs"
-                    value={formData.checkpointEpochs}
-                    onChange={handleInputChange}
-                    className="bg-slate-50 border-slate-300"
-                    min={1}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Batch Size</Label>
-                  <Input
-                    type="number"
-                    name="batchSize"
-                    value={formData.batchSize}
-                    onChange={handleInputChange}
-                    className="bg-slate-50 border-slate-300"
-                    min={1}
-                    max={32}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Keep Last K</Label>
-                  <Input
-                    type="number"
-                    name="keepLastK"
-                    value={formData.keepLastK}
-                    onChange={handleInputChange}
-                    className="bg-slate-50 border-slate-300"
-                    min={1}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Precision</Label>
-                  <Select
-                    value={formData.precision}
-                    onValueChange={(v) => handleSelectChange("precision", v)}
-                  >
-                    <SelectTrigger className="bg-slate-50 border-slate-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-300">
-                      {PRECISION_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Quality</Label>
-                  <Select
-                    value={formData.quality}
-                    onValueChange={(v) => handleSelectChange("quality", v)}
-                  >
-                    <SelectTrigger className="bg-slate-50 border-slate-300">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-slate-300">
-                      {QUALITY_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="space-y-2">
+                <Label className="text-slate-700">Dataset Repo ID</Label>
+                <Input
+                  name="hfDatasetRepoId"
+                  value={formData.hfDatasetRepoId}
+                  onChange={handleInputChange}
+                  placeholder="username/dataset-name"
+                  className="bg-slate-50 border-slate-200"
+                />
               </div>
 
               <div className="space-y-2">
-                <Label>Language</Label>
+                <Label className="text-slate-700">Dataset Token (Read)</Label>
+                <Input
+                  type="password"
+                  name="hfDatasetDownloadToken"
+                  value={formData.hfDatasetDownloadToken}
+                  onChange={handleInputChange}
+                  placeholder="hf_XXXXXXXX"
+                  className="bg-slate-50 border-slate-200"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Upload Repo ID</Label>
+                <Input
+                  name="hfUploadRepoId"
+                  value={formData.hfUploadRepoId}
+                  onChange={handleInputChange}
+                  placeholder="username/checkpoints"
+                  className="bg-slate-50 border-slate-200"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Upload Token (Write)</Label>
+                <Input
+                  type="password"
+                  name="hfUploadToken"
+                  value={formData.hfUploadToken}
+                  onChange={handleInputChange}
+                  placeholder="hf_XXXXXXXX"
+                  className="bg-slate-50 border-slate-200"
+                />
+              </div>
+
+              <div className="space-y-2 sm:col-span-2">
+                <Label className="text-slate-700">Session Name</Label>
+                <Input
+                  name="hfSessionName"
+                  value={formData.hfSessionName}
+                  onChange={handleInputChange}
+                  placeholder="voice-name-v1"
+                  className="bg-slate-50 border-slate-200 max-w-md"
+                />
+                <p className="text-xs text-slate-400">
+                  Folder name for organizing checkpoints in your upload repo
+                </p>
+              </div>
+            </div>
+
+            {/* Checkpoint Resume */}
+            <div className="mt-6 pt-5 border-t border-slate-100">
+              <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Resume from Checkpoint
+                <span className="text-slate-400 font-normal">(Optional)</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Input
+                  name="hfCheckpointDownloadUrl"
+                  value={formData.hfCheckpointDownloadUrl || ""}
+                  onChange={handleInputChange}
+                  placeholder="Checkpoint URL"
+                  className="bg-slate-50 border-slate-200 text-sm"
+                />
+                <Input
+                  name="hfCheckpointName"
+                  value={formData.hfCheckpointName || ""}
+                  onChange={handleInputChange}
+                  placeholder="epoch=XXX-step=XXX.ckpt"
+                  className="bg-slate-50 border-slate-200 text-sm"
+                />
+                <Input
+                  type="password"
+                  name="hfCheckpointDownloadToken"
+                  value={formData.hfCheckpointDownloadToken || ""}
+                  onChange={handleInputChange}
+                  placeholder="Token (if private)"
+                  className="bg-slate-50 border-slate-200 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Training Parameters */}
+          <div id="training-params" className="p-6 border-b border-slate-100">
+            <SectionHeader
+              icon={Settings}
+              title="Training Parameters"
+              description="Configure hyperparameters and training settings"
+            />
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+              <div className="space-y-2">
+                <Label className="text-slate-700">Max Epochs</Label>
+                <Input
+                  type="number"
+                  name="maxEpochs"
+                  value={formData.maxEpochs}
+                  onChange={handleInputChange}
+                  className="bg-slate-50 border-slate-200"
+                  min={1}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Checkpoint Every</Label>
+                <Input
+                  type="number"
+                  name="checkpointEpochs"
+                  value={formData.checkpointEpochs}
+                  onChange={handleInputChange}
+                  className="bg-slate-50 border-slate-200"
+                  min={1}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Batch Size</Label>
+                <Input
+                  type="number"
+                  name="batchSize"
+                  value={formData.batchSize}
+                  onChange={handleInputChange}
+                  className="bg-slate-50 border-slate-200"
+                  min={1}
+                  max={32}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Keep Last K</Label>
+                <Input
+                  type="number"
+                  name="keepLastK"
+                  value={formData.keepLastK}
+                  onChange={handleInputChange}
+                  className="bg-slate-50 border-slate-200"
+                  min={1}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Precision</Label>
+                <Select
+                  value={formData.precision}
+                  onValueChange={(v) => handleSelectChange("precision", v)}
+                >
+                  <SelectTrigger className="bg-slate-50 border-slate-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {PRECISION_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Quality</Label>
+                <Select
+                  value={formData.quality}
+                  onValueChange={(v) => handleSelectChange("quality", v)}
+                >
+                  <SelectTrigger className="bg-slate-50 border-slate-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white">
+                    {QUALITY_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-700">Language</Label>
                 <Select
                   value={formData.language}
                   onValueChange={(v) => handleSelectChange("language", v)}
                 >
-                  <SelectTrigger className="bg-slate-50 border-slate-300">
+                  <SelectTrigger className="bg-slate-50 border-slate-200">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-slate-300">
+                  <SelectContent className="bg-white">
                     {LANGUAGES.map((lang) => (
                       <SelectItem key={lang.code} value={lang.code}>
                         {lang.name}
@@ -520,50 +558,53 @@ export function JobForm({ client, onSuccess }: JobFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label>Max Workers</Label>
+                <Label className="text-slate-700">Max Workers</Label>
                 <Input
                   type="number"
                   name="maxWorkers"
                   value={formData.maxWorkers}
                   onChange={handleInputChange}
-                  className="bg-slate-50 border-slate-300"
+                  className="bg-slate-50 border-slate-200"
                   min={1}
-                  max={4}
+                  max={8}
                 />
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
 
+          {/* Error Display */}
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+            <div className="mx-6 mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
               {error}
             </div>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-3 mt-4">
+          {/* Sticky Footer with Actions */}
+          <div className="sticky bottom-0 p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row gap-3 rounded-b-lg">
             <Button
               type="button"
               variant="outline"
               onClick={handleReset}
               disabled={loading}
-              className="sm:flex-none"
+              className="sm:w-auto"
             >
-              {step === "config" ? "Reset" : "Back"}
+              Reset Form
             </Button>
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold"
             >
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  {step === "hyperparams" ? "Deploying..." : "Next"}
+                  Deploying...
                 </>
-              ) : step === "hyperparams" ? (
-                "LAGA Training"
               ) : (
-                "Next"
+                <>
+                  <Rocket className="w-4 h-4 mr-2" />
+                  Deploy Training Pod
+                </>
               )}
             </Button>
           </div>

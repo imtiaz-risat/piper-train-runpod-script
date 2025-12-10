@@ -8,8 +8,8 @@ export async function POST(request: NextRequest) {
     const { username, password } = await request.json();
 
     // Read credentials from environment variables
-    const validUsername = process.env.AUTH_USERNAME || "SUPIPER";
-    const validPassword = process.env.AUTH_PASSWORD || "super-piper";
+    const validUsername = process.env.AUTH_USERNAME;
+    const validPassword = process.env.AUTH_PASSWORD;
 
     if (!username || !password) {
       return NextResponse.json(

@@ -1,0 +1,11 @@
+services:
+  firsttrain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: firsttrain-client
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.local
+    restart: unless-stopped

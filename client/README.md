@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FirstTrain - Piper TTS Training
 
-## Getting Started
+A modern web interface for deploying and managing Piper TTS training jobs on RunPod.
 
-First, run the development server:
+## Features
+
+- One-click training job deployment to RunPod
+- Comprehensive documentation for dataset preparation
+- Docker support for easy deployment
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 22+ (for local development without docker)
+- Docker and Docker Compose (for containerized deployment)
+- RunPod API Key with read/write permissions
+
+### Environment Setup
+
+1. Copy the environment template:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Edit `.env.local` with your values:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+RUNPOD_API_KEY=your_runpod_api_key
+AUTH_USERNAME=your_username
+AUTH_PASSWORD=your_password
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Running Locally
 
-To learn more about Next.js, take a look at the following resources:
+### Development Mode
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Install dependencies
+npm install
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Start development server
+npm run dev
+```
 
-## Deploy on Vercel
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Production Build
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+---
+
+## Docker Deployment
+
+### Using Docker Compose (Recommended)
+
+```bash
+# Build and start the container
+docker compose up --build -d
+
+# View logs
+docker compose logs firsttrain
+
+# Stop the container
+docker compose down
+```
+
+### Using Docker Directly
+
+```bash
+# Build the image
+docker build -t firsttrain-client .
+
+# Run the container
+docker run -d \
+  -p 3000:3000 \
+  -e RUNPOD_API_KEY=your_key \
+  -e AUTH_USERNAME=your_username \
+  -e AUTH_PASSWORD=your_password \
+  --name firsttrain \
+  firsttrain-client
+```
+
+---
+
+## Environment Variables
+
+| Variable         | Required | Default | Description                                |
+| ---------------- | -------- | ------- | ------------------------------------------ |
+| `RUNPOD_API_KEY` | Yes      | -       | Your RunPod API key with read/write access |
+| `AUTH_USERNAME`  | No       | \_      | Login username for the dashboard           |
+| `AUTH_PASSWORD`  | No       | \_      | Login password for the dashboard           |
+
+---
+
+## Project Structure
+
+```
+client/
+├── src/
+│   ├── app/              # Next.js app router pages
+│   │   ├── api/          # API routes (server-side)
+│   │   ├── docs/         # Documentation page
+│   │   ├── train/        # Training dashboard
+│   │   └── page.tsx      # Landing page
+│   ├── components/       # React components
+│   └── lib/              # Utilities and API client
+├── public/               # Static assets
+├── Dockerfile            # Docker build configuration
+├── docker-compose.yml    # Docker Compose setup
+└── .env.example          # Environment template
+```
+
+---
+
+## API Routes
+
+| Endpoint                    | Method | Description         |
+| --------------------------- | ------ | ------------------- |
+| `/api/v1/auth/login`        | POST   | User authentication |
+| `/api/v1/pods`              | GET    | List all pods       |
+| `/api/v1/pods`              | POST   | Create a new pod    |
+| `/api/v1/pods/[podId]`      | GET    | Get pod details     |
+| `/api/v1/pods/[podId]`      | DELETE | Terminate a pod     |
+| `/api/v1/pods/[podId]/stop` | POST   | Stop a pod          |
+
+---
+
+## Documentation
+
+Visit `/docs` in the application for comprehensive guides on:
+
+- Environment variables for training
+- Dataset preparation (LJSpeech format)
+- Hugging Face upload instructions
+
+---
+
+## Tech Stack
+
+- **Framework**: Next.js 16 with App Router
+- **Styling**: Tailwind CSS v4
+- **UI Components**: Radix UI + shadcn/ui
+- **Icons**: Lucide React
+- **Language**: TypeScript

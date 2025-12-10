@@ -113,16 +113,16 @@ export class APIClient {
   async createPod(config: JobConfig): Promise<CreatePodResponse> {
     try {
       const payload = {
-        name: config.name || "Default Training Pod",
+        name: config.name || "default_piper_training_pod",
         imageName:
           config.imageName ||
           "runpod/pytorch:2.2.0-py3.10-cuda12.1.1-devel-ubuntu22.04",
-        gpuTypeIds: config.gpuTypeIds || ["NVIDIA A100 80GB PCIe"],
-        cloudType: config.cloudType || "SECURE",
+        gpuTypeIds: config.gpuTypeIds || ["NVIDIA GeForce RTX 3070"],
+        cloudType: config.cloudType || "COMMUNITY",
         computeType: config.computeType || "GPU",
         gpuCount: config.gpuCount || 1,
         volumeInGb: config.volumeInGb || 20,
-        containerDiskInGb: config.containerDiskInGb || 80,
+        containerDiskInGb: config.containerDiskInGb || 50,
         volumeMountPath: config.volumeMountPath || "/workspace",
         supportPublicIp: config.supportPublicIp || true,
 

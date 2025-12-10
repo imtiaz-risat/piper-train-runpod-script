@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Piper Training Dashboard",
+  title: "FirstTrain",
   description: "Deploy and manage Piper TTS training on RunPod",
 };
 
