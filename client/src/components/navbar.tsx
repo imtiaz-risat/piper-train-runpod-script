@@ -38,7 +38,7 @@ export function Navbar({
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Docs Link */}
         <Link
-          href="/docs"
+          href="/docs/piper"
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
             activePage === "docs"
               ? "bg-purple-100 text-purple-700 border border-purple-200"
@@ -57,7 +57,7 @@ export function Navbar({
           </span>
         ) : (
           <Link
-            href="/train"
+            href="/train/piper"
             className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-purple-600 text-white hover:bg-purple-700 transition-all shadow-sm hover:shadow-md"
           >
             <Rocket className="w-4 h-4" />
