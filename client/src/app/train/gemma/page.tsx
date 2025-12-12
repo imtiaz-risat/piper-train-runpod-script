@@ -3,11 +3,13 @@
 import { Navbar } from "@/components/navbar";
 import { MessageSquare } from "lucide-react";
 import { ModuleSwitcher } from "@/components/module-switcher";
+import { useAuth } from "@/providers/auth-provider";
 
 export default function GemmaPage() {
+  const { logout } = useAuth();
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <Navbar activePage="train" />
+      <Navbar activePage="train" isAuthenticated={true} onLogout={logout} />
 
       <div className="flex justify-center gap-6 px-4 py-6 sm:py-8 sm:px-6 lg:px-8">
         <main className="flex-1 max-w-4xl">
