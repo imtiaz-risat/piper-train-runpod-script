@@ -45,9 +45,10 @@ import {
 
 interface JobFormProps {
   client: APIClient;
-  onSuccess: () => void;
+  onSuccess: (sessionId?: string) => void;
   formData: JobConfig;
   onFormDataChange: Dispatch<SetStateAction<JobConfig>>;
+  username: string;
 }
 
 // Helper to detect cloud type from GPU label
@@ -86,6 +87,7 @@ export function JobForm({
   onSuccess,
   formData,
   onFormDataChange: setFormData,
+  username,
 }: JobFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,9 +178,28 @@ export function JobForm({
     try {
       setLoading(true);
       setError(null);
-      await client.createPod(formData);
+
+      // Create the pod
+      const podResult = await client.createPod(formData);
+
+      // Create training session log
+      let sessionId: string | undefined;
+      try {
+        const logResult = await client.startTrainingSession(
+          formData,
+          username,
+          podResult.id,
+          podResult.name
+        );
+        sessionId = logResult.sessionId;
+        console.log("Training session log created:", sessionId);
+      } catch (logErr) {
+        // Log error but don't fail the pod creation
+        console.error("Failed to create training session log:", logErr);
+      }
+
       setFormData({ ...DEFAULT_JOB_CONFIG });
-      onSuccess();
+      onSuccess(sessionId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create pod");
     } finally {
@@ -413,7 +434,6 @@ export function JobForm({
               <h4 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" />
                 Resume from Checkpoint
-                <span className="text-slate-400 font-normal">(Optional)</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Input

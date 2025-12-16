@@ -11,7 +11,7 @@ import type { JobConfig } from "@/lib/types";
 import { useAuth } from "@/providers/auth-provider";
 
 export default function TrainPage() {
-  const { logout, apiClient } = useAuth();
+  const { logout, apiClient, username } = useAuth();
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [formData, setFormData] = useState<JobConfig>({
     ...DEFAULT_JOB_CONFIG,
@@ -23,7 +23,7 @@ export default function TrainPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 font-sans">
+    <div className="min-h-screen bg-linear-to-b from-slate-50 to-slate-100 font-sans">
       {/* Navigation */}
       <Navbar activePage="train" isAuthenticated={true} onLogout={logout} />
 
@@ -44,6 +44,7 @@ export default function TrainPage() {
               onSuccess={handleJobSuccess}
               formData={formData}
               onFormDataChange={setFormData}
+              username={username || "anonymous"}
             />
           </section>
         </main>

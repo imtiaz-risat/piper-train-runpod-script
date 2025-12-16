@@ -4,19 +4,38 @@ export const GPU_TYPES = [
   {
     id: "NVIDIA GeForce RTX 3070",
     label: "RTX 3070 (Community Cloud) - 0.13$/hr",
+    costPerHr: 0.13,
   },
   {
     id: "NVIDIA GeForce RTX 3080",
     label: "RTX 3080 (Community Cloud) - 0.17$/hr",
+    costPerHr: 0.17,
   },
   {
     id: "NVIDIA GeForce RTX 3090",
     label: "RTX 3090 (Community Cloud) - 0.22$/hr",
+    costPerHr: 0.22,
   },
-  { id: "NVIDIA A30", label: "A30 (Community Cloud) - 0.22$/hr" },
-  { id: "NVIDIA A40", label: "A40 (Secure Cloud) - 0.40$/hr" },
-  { id: "NVIDIA A100 80GB PCIe", label: "A100 PCIe (Secure Cloud) - 1.39$/hr" },
+  {
+    id: "NVIDIA A30",
+    label: "A30 (Community Cloud) - 0.22$/hr",
+    costPerHr: 0.22,
+  },
+  { id: "NVIDIA A40", label: "A40 (Secure Cloud) - 0.40$/hr", costPerHr: 0.4 },
+  {
+    id: "NVIDIA A100 80GB PCIe",
+    label: "A100 PCIe (Secure Cloud) - 1.39$/hr",
+    costPerHr: 1.39,
+  },
 ];
+
+/**
+ * Get the cost per hour for a given GPU type ID
+ */
+export function getGpuCostPerHr(gpuTypeId: string): number {
+  const gpu = GPU_TYPES.find((g) => g.id === gpuTypeId);
+  return gpu?.costPerHr ?? 0;
+}
 
 export const CLOUD_TYPES = [
   { id: "COMMUNITY", label: "Community Cloud (Cheaper)" },

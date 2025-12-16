@@ -6,6 +6,12 @@ import type {
   StopPodResponse,
   PodDetails,
 } from "./types";
+import type {
+  CreateTrainingLogRequest,
+  CreateTrainingLogResponse,
+  TrainingModuleType,
+} from "./training-types";
+import { getGpuCostPerHr } from "./constants";
 
 // Use internal API proxy routes
 const API_BASE_URL = "/api/v1";
@@ -254,6 +260,73 @@ export class APIClient {
       POD_NAME: config.name,
     };
   }
+
+  // ------------------------------------------------------------------------- //
+  // Training Session Logging Methods
+  // ------------------------------------------------------------------------- //
+
+  /**
+   * Start a new training session log
+   */
+  async startTrainingSession(
+    config: JobConfig,
+    username: string,
+    podId: string,
+    podName: string | null,
+    trainingType: TrainingModuleType = "piper"
+  ): Promise<CreateTrainingLogResponse> {
+    try {
+      const payload: CreateTrainingLogRequest = {
+        username,
+        podId,
+        podName,
+        trainingType,
+        config: {
+          hfDatasetRepoId: config.hfDatasetRepoId,
+          hfUploadRepoId: config.hfUploadRepoId,
+          hfSessionName: config.hfSessionName,
+          hfCheckpointName: config.hfCheckpointName,
+          hfCheckpointDownloadUrl: config.hfCheckpointDownloadUrl,
+          maxEpochs: config.maxEpochs,
+          checkpointEpochs: config.checkpointEpochs,
+          batchSize: config.batchSize,
+          precision: config.precision,
+          quality: config.quality,
+          keepLastK: config.keepLastK,
+          language: config.language,
+          maxWorkers: config.maxWorkers,
+        },
+        pod: {
+          gpuType: config.gpuTypeIds[0] || "unknown",
+          gpuCount: config.gpuCount,
+          cloudType: config.cloudType,
+          costPerHr: getGpuCostPerHr(config.gpuTypeIds[0] || ""),
+          imageName: config.imageName,
+          volumeInGb: config.volumeInGb,
+          containerDiskInGb: config.containerDiskInGb,
+        },
+      };
+
+      const response = await fetch(`${API_BASE_URL}/logs/training`, {
+        method: "POST",
+        headers: this.getHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to create training log: ${response.statusText}`
+        );
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error creating training session log:", error);
+      throw error;
+    }
+  }
+
+  // ------------------------------------------------------------------------- //
 
   /**
    * Get headers for API requests (API key is now managed server-side)
